@@ -216,7 +216,10 @@ end)
 local Tab = Window:NewTab("Misc")
 -- Подсекция
 local Section = Tab:NewSection("Misc")
-
+-- Бинд на правый Shift для открытия/закрытия меню
+Section:NewKeybind("Toggle Menu", "Press RightShift to open/close menu", Enum.KeyCode.RightShift, function()
+    Library:ToggleUI()
+end)
 
 
 local Tab = Window:NewTab("Developers")
@@ -240,3 +243,4 @@ Section:NewButton("Last UPD in 24.09.25", "IDK", function()
 end)
 Section:NewButton("Thx for play))", "Good luck", function()
 end)
+
