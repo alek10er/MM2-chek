@@ -25,6 +25,91 @@ Section:NewSlider("Jump Power", "You can change jump height", 200, 50, function(
     game.Players.LocalPlayer.Character.Humanoid.JumpPower = s
 end)
 
+
+local RunService = game:GetService("RunService")
+
+local teleportingToCoins = false
+
+-- Функция поиска ВСЕХ монеток в workspace (без привязки к контейнеру)
+local function findAllCoins()
+    local coins = {}
+    
+    -- Ищем все объекты с именем Coin_Server в любом месте workspace
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name == "Coin_Server" and obj:IsA("Part") then
+            table.insert(coins, obj)
+        end
+    end
+    
+    return coins
+end
+
+-- Функция поиска и телепортации к монеткам
+local function startCoinTeleport()
+    if teleportingToCoins then return end
+    teleportingToCoins = true
+    
+    local function teleportToCoins()
+        while teleportingToCoins do
+            -- Ищем ВСЕ монетки в workspace
+            local coins = findAllCoins()
+            
+            if #coins == 0 then
+                print("Монетки Coin_Server не найдены в workspace")
+                wait(2)
+                continue
+            end
+            
+            print("Найдено монеток: " .. #coins)
+            
+            -- Телепортируемся по всем монеткам
+            local localPlayer = game.Players.LocalPlayer
+            local character = localPlayer.Character
+            
+            for i, coin in ipairs(coins) do
+                if not teleportingToCoins then break end
+                if not character or character.Parent == nil then break end
+                
+                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                if not humanoidRootPart then break end
+                
+                -- Телепортируемся к монетке
+                local targetCFrame = coin.CFrame + Vector3.new(0, 3, 0)
+                humanoidRootPart.CFrame = targetCFrame
+                
+                print("✅ Телепортирован к монетке " .. i .. "/" .. #coins)
+                
+                -- Ждем секунду перед следующей телепортацией
+                wait(3)
+            end
+            
+            -- Короткая пауза перед новым циклом
+            if teleportingToCoins then
+                wait(0.5)
+            end
+        end
+    end
+    
+    -- Запускаем цикл телепортации
+    spawn(teleportToCoins)
+end
+
+local function stopCoinTeleport()
+    teleportingToCoins = false
+    print("Авто-телепорт к монеткам выключен")
+end
+
+-- Переключатель авто-телепорта к монеткам
+Section:NewToggle("Auto Coin TP (Alfa)", "Automatic teleportation using coins", function(state)
+    if state then
+        print("Авто-телепорт к монеткам включен")
+        startCoinTeleport()
+    else
+        print("Авто-телепорт к монеткам выключен")
+        stopCoinTeleport()
+    end
+end)
+
 -- Секция
 local Tab = Window:NewTab("ESP")
 
