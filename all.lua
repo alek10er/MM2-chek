@@ -110,6 +110,11 @@ Section:NewToggle("Auto Coin TP (Alfa)", "Automatic teleportation using coins", 
     end
 end)
 
+-- Бинд на правый Shift для открытия/закрытия меню
+Section:NewKeybind("Toggle Menu", "Press RightShift to open/close menu", Enum.KeyCode.RightShift, function()
+    Library:ToggleUI()
+end)
+
 -- Секция
 local Tab = Window:NewTab("ESP")
 
@@ -580,10 +585,6 @@ end)
 local Tab = Window:NewTab("Misc")
 -- Подсекция
 local Section = Tab:NewSection("Misc")
--- Бинд на правый Shift для открытия/закрытия меню
-Section:NewKeybind("Toggle Menu", "Press RightShift to open/close menu", Enum.KeyCode.RightShift, function()
-    Library:ToggleUI()
-end)
 
 -- Кнопка
 Section:NewButton("Infinite Yield", "Infinite Yield console", function()
