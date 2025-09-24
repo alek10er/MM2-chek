@@ -222,14 +222,21 @@ local Section = Tab:NewSection("Misc")
 local Tab = Window:NewTab("Developers")
 -- Подсекция
 local Section = Tab:NewSection("Developers")
+Section:NewButton("Skuuv", "Main developer", function()
+end)
+Section:NewButton("Alek", "scripter", function()
+end)
+
 
 
 
 local Tab = Window:NewTab("News")
 -- Подсекция
 local Section = Tab:NewSection("News")
--- Заголовок
-Section:NewLabel("M9KUUVS SOFTWARE SYSTEMS V1.0.0")
-Section:NewLabel("Last UPD in 24.09.25")
-Section:NewLabel("Thx for play)) ")
 
+Section:NewButton("M9KUUVS SOFTWARE SYSTEMS V1.0.0", "IDK", function()
+end)
+Section:NewButton("Last UPD in 24.09.25", "IDK", function()
+end)
+Section:NewButton("Thx for play))", "Good luck", function()
+end)
