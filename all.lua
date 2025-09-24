@@ -25,16 +25,16 @@ Section:NewSlider("Jump Power", "You can change jump height", 200, 50, function(
     game.Players.LocalPlayer.Character.Humanoid.JumpPower = s
 end)
 
-
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local teleportingToCoins = false
+local currentTween = nil
 
--- Функция поиска ВСЕХ монеток в workspace (без привязки к контейнеру)
+-- Функция поиска ВСЕХ монеток в workspace
 local function findAllCoins()
     local coins = {}
     
-    -- Ищем все объекты с именем Coin_Server в любом месте workspace
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj.Name == "Coin_Server" and obj:IsA("Part") then
             table.insert(coins, obj)
@@ -44,69 +44,223 @@ local function findAllCoins()
     return coins
 end
 
--- Функция поиска и телепортации к монеткам
-local function startCoinTeleport()
-    if teleportingToCoins then return end
-    teleportingToCoins = true
+-- Функция проверки валидности позиции
+local function isValidPosition(position)
+    return 
+        position ~= nil and
+        math.abs(position.X) < 10000 and
+        math.abs(position.Y) < 10000 and
+        math.abs(position.Z) < 10000 and
+        position.X == position.X and
+        position.Y == position.Y and
+        position.Z == position.Z
+end
+
+-- Функция проверки расстояния до монетки
+local function getDistanceToCoin(character, coin)
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart or not coin then return math.huge end
     
-    local function teleportToCoins()
-        while teleportingToCoins do
-            -- Ищем ВСЕ монетки в workspace
-            local coins = findAllCoins()
-            
-            if #coins == 0 then
-                print("Монетки Coin_Server не найдены в workspace")
-                wait(2)
-                continue
-            end
-            
-            print("Найдено монеток: " .. #coins)
-            
-            -- Телепортируемся по всем монеткам
-            local localPlayer = game.Players.LocalPlayer
-            local character = localPlayer.Character
-            
-            for i, coin in ipairs(coins) do
-                if not teleportingToCoins then break end
-                if not character or character.Parent == nil then break end
-                
-                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                if not humanoidRootPart then break end
-                
-                -- Телепортируемся к монетке
-                local targetCFrame = coin.CFrame + Vector3.new(0, 3, 0)
-                humanoidRootPart.CFrame = targetCFrame
-                
-                print("✅ Телепортирован к монетке " .. i .. "/" .. #coins)
-                
-                -- Ждем секунду перед следующей телепортацией
-                wait(3)
-            end
-            
-            -- Короткая пауза перед новым циклом
-            if teleportingToCoins then
-                wait(0.5)
+    return (humanoidRootPart.Position - coin.Position).Magnitude
+end
+
+-- Функция для включения/выключения ходьбы
+local function setHumanoidWalking(character, enabled)
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = enabled and 20 or 0 -- Увеличили скорость ходьбы
+    end
+end
+
+-- Функция быстрого реалистичного перемещения к монетке
+local function moveToCoin(character, coin)
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoidRootPart or not humanoid or not coin then return false end
+    
+    if not isValidPosition(coin.Position) then
+        print("❌ Невалидная позиция монетки")
+        return false
+    end
+    
+    local targetPosition = coin.Position + Vector3.new(0, 2, 0)
+    if not isValidPosition(targetPosition) then
+        print("❌ Невалидная целевая позиция")
+        return false
+    end
+    
+    local distance = getDistanceToCoin(character, coin)
+    local success = true
+    
+    -- Если монетка очень близко (до 15 studs) - быстрая ходьба
+    if distance < 15 then
+        setHumanoidWalking(character, true)
+        humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
+        wait(0.3) -- Уменьшили паузу ходьбы
+        setHumanoidWalking(character, false)
+        
+    -- Если монетка на среднем расстоянии (15-40 studs) - быстрый полет
+    elseif distance < 40 then
+        setHumanoidWalking(character, true)
+        humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
+        wait(0.4) -- Короткая ходьба
+        
+        setHumanoidWalking(character, false)
+        local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) -- Ускорили полет
+        local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(targetPosition)})
+        tween:Play()
+        tween.Completed:Wait()
+        
+    -- Если монетка далеко (40+ studs) - ускоренное комбинированное перемещение
+    else
+        -- Этап 1: Быстрая ходьба
+        setHumanoidWalking(character, true)
+        humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
+        wait(0.6) -- Уменьшили время ходьбы
+        
+        -- Этап 2: Быстрый полет
+        setHumanoidWalking(character, false)
+        local intermediatePosition = (humanoidRootPart.Position + targetPosition) / 2
+        intermediatePosition = intermediatePosition + Vector3.new(0, 4, 0)
+        
+        local tweenInfo1 = TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) -- Ускорили
+        local tween1 = TweenService:Create(humanoidRootPart, tweenInfo1, {CFrame = CFrame.new(intermediatePosition)})
+        tween1:Play()
+        tween1.Completed:Wait()
+        
+        -- Этап 3: Быстрый завершающий полет
+        local tweenInfo2 = TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.In) -- Ускорили
+        local tween2 = TweenService:Create(humanoidRootPart, tweenInfo2, {CFrame = CFrame.new(targetPosition)})
+        tween2:Play()
+        tween2.Completed:Wait()
+        
+        -- Короткая имитация приземления
+        setHumanoidWalking(character, true)
+        wait(0.2) -- Уменьшили паузу
+        setHumanoidWalking(character, false)
+    end
+    
+    return success
+end
+
+-- Функция сортировки монеток по расстоянию
+local function sortCoinsByDistance(character, coins)
+    local sortedCoins = {}
+    local distances = {}
+    
+    for _, coin in ipairs(coins) do
+        local distance = getDistanceToCoin(character, coin)
+        table.insert(sortedCoins, coin)
+        table.insert(distances, distance)
+    end
+    
+    for i = 1, #sortedCoins - 1 do
+        for j = i + 1, #sortedCoins do
+            if distances[i] > distances[j] then
+                sortedCoins[i], sortedCoins[j] = sortedCoins[j], sortedCoins[i]
+                distances[i], distances[j] = distances[j], distances[i]
             end
         end
     end
     
-    -- Запускаем цикл телепортации
-    spawn(teleportToCoins)
+    return sortedCoins
 end
 
-local function stopCoinTeleport()
+-- Функция быстрого поиска и перемещения к монеткам
+local function startCoinCollection()
+    if teleportingToCoins then return end
+    teleportingToCoins = true
+    
+    local function collectCoins()
+        while teleportingToCoins do
+            local localPlayer = game.Players.LocalPlayer
+            local character = localPlayer.Character
+            
+            if not character or not character.Parent then
+                wait(1) -- Уменьшили паузу
+                continue
+            end
+            
+            setHumanoidWalking(character, true)
+            wait(0.3) -- Уменьшили начальную паузу
+            
+            local coins = findAllCoins()
+            
+            if #coins == 0 then
+                print("Монетки не найдены")
+                setHumanoidWalking(character, false)
+                wait(2) -- Уменьшили паузу
+                continue
+            end
+            
+            print("⚡ Найдено монеток: " .. #coins)
+            
+            local sortedCoins = sortCoinsByDistance(character, coins)
+            
+            for i, coin in ipairs(sortedCoins) do
+                if not teleportingToCoins then break end
+                if not character or character.Parent == nil then break end
+                
+                if not coin or not coin.Parent then
+                    continue
+                end
+                
+                if not isValidPosition(coin.Position) then
+                    continue
+                end
+                
+                local distance = getDistanceToCoin(character, coin)
+                print("🎯 Монетка " .. i .. "/" .. #sortedCoins .. " (" .. math.floor(distance) .. " studs)")
+                
+                local success = moveToCoin(character, coin)
+                
+                if success then
+                    print("✅ Забрал монетку " .. i)
+                    -- Короткие паузы после сбора
+                    setHumanoidWalking(character, true)
+                    wait(0.4) -- Уменьшили
+                    setHumanoidWalking(character, false)
+                    wait(0.3) -- Уменьшили
+                else
+                    print("❌ Ошибка")
+                    wait(0.5) -- Уменьшили
+                end
+            end
+            
+            if teleportingToCoins then
+                setHumanoidWalking(character, false)
+                print("🔁 Поиск новых монеток...")
+                wait(1) -- Уменьшили паузу между циклами
+            end
+        end
+    end
+    
+    spawn(collectCoins)
+end
+
+local function stopCoinCollection()
     teleportingToCoins = false
-    print("Авто-телепорт к монеткам выключен")
+    if currentTween then
+        currentTween:Cancel()
+        currentTween = nil
+    end
+    
+    local localPlayer = game.Players.LocalPlayer
+    if localPlayer and localPlayer.Character then
+        setHumanoidWalking(localPlayer.Character, false)
+    end
+    
+    print("Авто-сбор выключен")
 end
 
--- Переключатель авто-телепорта к монеткам
-Section:NewToggle("Auto Coin TP (Alfa)", "Automatic teleportation using coins", function(state)
+-- Переключатель
+Section:NewToggle("Auto Coin Collection (Fast)", "Fast realistic movement to coins", function(state)
     if state then
-        print("Авто-телепорт к монеткам включен")
-        startCoinTeleport()
+        print("⚡ Авто-сбор включен (быстрый режим)")
+        startCoinCollection()
     else
-        print("Авто-телепорт к монеткам выключен")
-        stopCoinTeleport()
+        print("Авто-сбор выключен")
+        stopCoinCollection()
     end
 end)
 
