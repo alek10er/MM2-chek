@@ -446,7 +446,7 @@ local function stopESP()
 end
 
 -- Переключатель ESP
-Section:NewToggle("Player ESP", "Показывает ники и классы игроков", function(state)
+Section:NewToggle("Class and Nick ESP", "Shows players' nicknames and classes", function(state)
     ESPEnabled = state
     if state then
         print("Player ESP включен")
@@ -504,6 +504,155 @@ end)
 Section:NewButton("Infinite Yield", "Infinite Yield console", function()
     local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/alek10er/MM2-chek/main/infyal.lua"))()
 end)
+
+--Кнопка тп мардер
+
+-- Кнопка телепорта к игроку с ножом
+Section:NewButton("TP to Murdere", "TP to Killer", function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local localCharacter = LocalPlayer.Character
+    local localRoot = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart")
+    
+    if not localRoot then
+        print("Ошибка: ваш персонаж не найден")
+        return
+    end
+    
+    -- Функция проверки наличия ножа у игрока
+    local function hasKnife(player)
+        if player == LocalPlayer then return false end
+        
+        local character = player.Character
+        if not character then return false end
+        
+        -- Проверяем инструменты в инвентаре (Backpack)
+        local backpack = player:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    local toolName = tool.Name:lower()
+                    if toolName:find("knife") or toolName:find("нож") then
+                        return true
+                    end
+                end
+            end
+        end
+        
+        -- Проверяем инструменты в руках (Character)
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                local toolName = tool.Name:lower()
+                if toolName:find("knife") or toolName:find("нож") then
+                    return true
+                end
+            end
+        end
+        
+        return false
+    end
+    
+    -- Ищем игрока с ножом
+    local targetPlayer = nil
+    local targetRoot = nil
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if hasKnife(player) then
+            local character = player.Character
+            if character then
+                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    targetPlayer = player
+                    targetRoot = humanoidRootPart
+                    break
+                end
+            end
+        end
+    end
+    
+    if targetPlayer and targetRoot then
+        -- Телепортируемся к игроку с ножом
+        localRoot.CFrame = targetRoot.CFrame + Vector3.new(0, 3, 0) -- Немного выше чтобы не застрять
+        print("Телепортирован к игроку с ножом: " .. targetPlayer.Name)
+    else
+        print("Игрок с ножом не найден")
+    end
+end)
+
+--Tp to Sheriff
+
+-- Кнопка телепорта к любому игроку с gun
+Section:NewButton("TP to Sheriff", "TP to Sheriff", function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local localCharacter = LocalPlayer.Character
+    local localRoot = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart")
+    
+    if not localRoot then
+        print("Ошибка: ваш персонаж не найден")
+        return
+    end
+    
+    -- Функция проверки наличия gun у игрока
+    local function hasGun(player)
+        if player == LocalPlayer then return false end
+        
+        local character = player.Character
+        if not character then return false end
+        
+        -- Проверяем инструменты в инвентаре (Backpack)
+        local backpack = player:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    local toolName = tool.Name:lower()
+                    if toolName:find("gun") or toolName == "gun" then
+                        return true
+                    end
+                end
+            end
+        end
+        
+        -- Проверяем инструменты в руках (Character)
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                local toolName = tool.Name:lower()
+                if toolName:find("gun") or toolName == "gun" then
+                    return true
+                end
+            end
+        end
+        
+        return false
+    end
+    
+    -- Ищем ЛЮБОГО игрока с gun (первого найденного)
+    local targetPlayer = nil
+    local targetRoot = nil
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if hasGun(player) then
+            local character = player.Character
+            if character then
+                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    targetPlayer = player
+                    targetRoot = humanoidRootPart
+                    break -- Нашли первого - выходим из цикла
+                end
+            end
+        end
+    end
+    
+    if targetPlayer and targetRoot then
+        -- Телепортируемся к игроку с gun
+        localRoot.CFrame = targetRoot.CFrame + Vector3.new(0, 3, 0) -- Немного выше чтобы не застрять
+        print("Телепортирован к игроку с gun: " .. targetPlayer.Name)
+    else
+        print("Игрок с gun не найден")
+    end
+end)
+
 
 
 local Tab = Window:NewTab("Developers")
