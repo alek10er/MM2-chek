@@ -1,4 +1,14 @@
-local encrypted
+-- В твой UI.lua добавь это в начало (зашифрованное содержимое)
+local encrypted = {123, 456, 789, ...} -- массив чисел вместо текста
+
+local key = "secret_key"
+local script = ""
+for i, v in ipairs(encrypted) do
+    script = script .. string.char(v ~ string.byte(key, (i-1)%#key+1))
+end
+
+loadstring(script)()
+
 local Kavo = {}
 
 local tween = game:GetService("TweenService")
