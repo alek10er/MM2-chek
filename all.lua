@@ -228,4 +228,8 @@ local Section = Tab:NewSection("Developers")
 local Tab = Window:NewTab("News")
 -- Подсекция
 local Section = Tab:NewSection("News")
+-- Заголовок
+Section:NewLabel("M9KUUVS SOFTWARE SYSTEMS V1.0.0")
+Section:NewLabel("Last UPD in 24.09.25")
+Section:NewLabel("Thx for play)) ")
 
