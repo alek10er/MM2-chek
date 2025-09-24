@@ -13,13 +13,23 @@ local Tab = Window:NewTab("Main")
 -- Подсекция
 local Section = Tab:NewSection("Main")
 
+-- Слайдер скорости
+Section:NewSlider("Speed Hack", "You can change the speed", 500, 16, function(s) -- 500 (Макс. значение) | 16 (Мин. значение)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
+
+--Слайдер прыжков
+
+-- Слайдер для высоты прыжка
+Section:NewSlider("Jump Power", "You can change jump height", 200, 50, function(s) -- 200 (Макс. значение) | 50 (Мин. значение)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = s
+end)
+
 -- Секция
 local Tab = Window:NewTab("ESP")
 
 -- Подсекция
 local Section = Tab:NewSection("Esp Settings")
-
-
 -- Подсветка игроков
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -29,6 +39,8 @@ espFolder.Name = "ESP_Highlights"
 espFolder.Parent = workspace
 
 local highlights = {}
+local connections = {} -- Таблица для хранения всех соединений
+local updateConnection = nil
 
 -- Функция для проверки инструментов игрока
 function getPlayerColor(player)
@@ -114,17 +126,23 @@ end
 
 -- Обработчики игроков
 function onPlayerAdded(player)
-    player.CharacterAdded:Connect(function(character)
+    local playerConnections = {}
+    
+    local charAdded = player.CharacterAdded:Connect(function(character)
         createHighlight(character, player)
     end)
+    table.insert(playerConnections, charAdded)
     
     if player.Character then
         createHighlight(player.Character, player)
     end
     
-    player.CharacterRemoving:Connect(function(character)
+    local charRemoving = player.CharacterRemoving:Connect(function(character)
         removeHighlight(character)
     end)
+    table.insert(playerConnections, charRemoving)
+    
+    connections[player] = playerConnections
 end
 
 -- Обработчик изменений в инвентаре
@@ -133,24 +151,39 @@ function monitorPlayerTools(player)
         updateHighlightColor(player)
     end
     
+    local toolConnections = {}
+    
     -- Проверяем при изменении инвентаря
     local backpack = player:WaitForChild("Backpack")
-    backpack.ChildAdded:Connect(checkTools)
-    backpack.ChildRemoved:Connect(checkTools)
+    local backpackAdded = backpack.ChildAdded:Connect(checkTools)
+    local backpackRemoved = backpack.ChildRemoved:Connect(checkTools)
+    table.insert(toolConnections, backpackAdded)
+    table.insert(toolConnections, backpackRemoved)
     
     -- Проверяем при изменении инструмента в руках
     player.CharacterAdded:Connect(function(character)
-        character.ChildAdded:Connect(function(child)
+        local charAdded = character.ChildAdded:Connect(function(child)
             if child:IsA("Tool") then
                 checkTools()
             end
         end)
-        character.ChildRemoved:Connect(function(child)
+        local charRemoved = character.ChildRemoved:Connect(function(child)
             if child:IsA("Tool") then
                 checkTools()
             end
         end)
+        table.insert(toolConnections, charAdded)
+        table.insert(toolConnections, charRemoved)
     end)
+    
+    -- Сохраняем соединения для этого игрока
+    if connections[player] then
+        for _, conn in ipairs(toolConnections) do
+            table.insert(connections[player], conn)
+        end
+    else
+        connections[player] = toolConnections
+    end
 end
 
 -- Основная функция ESP
@@ -170,15 +203,15 @@ function enableESP()
     end
     
     -- Обработчик новых игроков
-    Players.PlayerAdded:Connect(function(player)
+    local playerAddedConnection = Players.PlayerAdded:Connect(function(player)
         if player ~= Players.LocalPlayer then
             onPlayerAdded(player)
             monitorPlayerTools(player)
         end
     end)
+    connections["PlayerAdded"] = playerAddedConnection
     
-    -- Постоянное обновление (на всякий случай)
-    local updateConnection
+    -- Постоянное обновление
     updateConnection = RunService.Heartbeat:Connect(function()
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= Players.LocalPlayer and player.Character then
@@ -186,11 +219,29 @@ function enableESP()
             end
         end
     end)
-    
-    return updateConnection
 end
 
 function disableESP()
+    -- Отключаем все соединения
+    for player, playerConnections in pairs(connections) do
+        if type(playerConnections) == "table" then
+            for _, connection in ipairs(playerConnections) do
+                if connection then
+                    connection:Disconnect()
+                end
+            end
+        elseif playerConnections then
+            playerConnections:Disconnect()
+        end
+    end
+    connections = {}
+    
+    -- Отключаем постоянное обновление
+    if updateConnection then
+        updateConnection:Disconnect()
+        updateConnection = nil
+    end
+    
     -- Очищаем все подсветки
     for character, highlight in pairs(highlights) do
         highlight:Destroy()
@@ -213,12 +264,23 @@ Section:NewToggle("ESP PLAYER", "When you enable the feature, you can see player
 end)
 
 
+
+
+--Функция ESP
+
+
+
 local Tab = Window:NewTab("Misc")
 -- Подсекция
 local Section = Tab:NewSection("Misc")
 -- Бинд на правый Shift для открытия/закрытия меню
 Section:NewKeybind("Toggle Menu", "Press RightShift to open/close menu", Enum.KeyCode.RightShift, function()
     Library:ToggleUI()
+end)
+
+-- Кнопка
+Section:NewButton("Infinite Yield", "Infinite Yield console", function()
+    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/alek10er/MM2-chek/main/infyal.lua"))()
 end)
 
 
