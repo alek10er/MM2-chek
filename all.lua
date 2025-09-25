@@ -996,6 +996,346 @@ Section:NewButton("TP to Sheriff", "TP to Sheriff", function()
     end
 end)
 
+--GUN TROL
+
+-- Кнопка для копирования gun
+Section:NewButton("Copy Gun", "You can copy gun but its not work", function()
+    local Players = game:GetService("Players")
+    local localPlayer = Players.LocalPlayer
+    local localCharacter = localPlayer.Character
+    local foundGun = false
+    
+    -- Проверяем, есть ли уже gun у локального игрока
+    if localCharacter then
+        -- Проверяем в инвентаре
+        local backpack = localPlayer:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "Error",
+                        Text = "You have gun",
+                        Duration = 3,
+                        Icon = "⚠️"
+                    })
+                    return
+                end
+            end
+        end
+        
+        -- Проверяем в руках
+        for _, tool in ipairs(localCharacter:GetChildren()) do
+            if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "Error",
+                    Text = "You have gun",
+                    Duration = 3,
+                    Icon = "⚠️"
+                })
+                return
+            end
+        end
+    end
+    
+    -- Ищем игрока с gun для копирования
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local character = player.Character
+            if character then
+                local gunTool = nil
+                
+                -- Ищем gun в инвентаре игрока
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                            gunTool = tool
+                            foundGun = true
+                            break
+                        end
+                    end
+                end
+                
+                -- Ищем gun в руках игрока
+                if not gunTool then
+                    for _, tool in ipairs(character:GetChildren()) do
+                        if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                            gunTool = tool
+                            foundGun = true
+                            break
+                        end
+                    end
+                end
+                
+                -- Если нашли gun - копируем
+                if gunTool then
+                    local clonedGun = gunTool:Clone()
+                    clonedGun.Parent = localPlayer.Backpack
+                    
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "Success",
+                        Text = "Gun copied successfully!",
+                        Duration = 3,
+                        Icon = "✅"
+                    })
+                    return
+                end
+            end
+        end
+    end
+    
+    -- Если gun не найден ни у кого
+    if not foundGun then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Error",
+            Text = "Gun drop (Use TP gun)",
+            Duration = 3,
+            Icon = "⚠️"
+        })
+    end
+end)
+
+
+-- Кнопка для копирования ножа
+Section:NewButton("Copy Knife", "Copy knife from other players", function()
+    local Players = game:GetService("Players")
+    local localPlayer = Players.LocalPlayer
+    local localCharacter = localPlayer.Character
+    local foundKnife = false
+    
+    -- Проверяем, есть ли уже нож у локального игрока
+    if localCharacter then
+        -- Проверяем в инвентаре
+        local backpack = localPlayer:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("нож")) then
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "Error",
+                        Text = "You have knife",
+                        Duration = 3,
+                        Icon = "⚠️"
+                    })
+                    return
+                end
+            end
+        end
+        
+        -- Проверяем в руках
+        for _, tool in ipairs(localCharacter:GetChildren()) do
+            if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("нож")) then
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "Error",
+                    Text = "You have knife",
+                    Duration = 3,
+                    Icon = "⚠️"
+                })
+                return
+            end
+        end
+    end
+    
+    -- Ищем игрока с ножом для копирования
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local character = player.Character
+            if character then
+                local knifeTool = nil
+                
+                -- Ищем нож в инвентаре игрока
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("нож")) then
+                            knifeTool = tool
+                            foundKnife = true
+                            break
+                        end
+                    end
+                end
+                
+                -- Ищем нож в руках игрока
+                if not knifeTool then
+                    for _, tool in ipairs(character:GetChildren()) do
+                        if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("нож")) then
+                            knifeTool = tool
+                            foundKnife = true
+                            break
+                        end
+                    end
+                end
+                
+                -- Если нашли нож - копируем
+                if knifeTool then
+                    local clonedKnife = knifeTool:Clone()
+                    clonedKnife.Parent = localPlayer.Backpack
+                    
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "Success",
+                        Text = "Knife copied successfully!",
+                        Duration = 3,
+                        Icon = "✅"
+                    })
+                    return
+                end
+            end
+        end
+    end
+    
+    -- Если нож не найден ни у кого
+    if not foundKnife then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Error",
+            Text = "Knife drop (Use TP knife)",
+            Duration = 3,
+            Icon = "⚠️"
+        })
+    end
+end)
+
+-- Автоматический ассасин (нож против gun)
+Section:NewToggle("Auto Assassin", "Auto teleport and kill gun players with knife", function(state)
+    if state then
+        print("Auto Assassin On")
+        
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local UserInputService = game:GetService("UserInputService")
+        local localPlayer = Players.LocalPlayer
+        
+        local assassinLoop
+        local isAttacking = false
+        
+        -- Функция для поиска игрока с gun
+        function findGunPlayer()
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= localPlayer and player.Character then
+                    local character = player.Character
+                    local humanoid = character:FindFirstChild("Humanoid")
+                    local rootPart = character:FindFirstChild("HumanoidRootPart")
+                    
+                    if humanoid and humanoid.Health > 0 and rootPart then
+                        local hasGun = false
+                        
+                        -- Проверяем gun в инвентаре
+                        local backpack = player:FindFirstChild("Backpack")
+                        if backpack then
+                            for _, tool in ipairs(backpack:GetChildren()) do
+                                if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                                    hasGun = true
+                                    break
+                                end
+                            end
+                        end
+                        
+                        -- Проверяем gun в руках
+                        if not hasGun then
+                            for _, tool in ipairs(character:GetChildren()) do
+                                if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                                    hasGun = true
+                                    break
+                                end
+                            end
+                        end
+                        
+                        if hasGun then
+                            return player, character, rootPart
+                        end
+                    end
+                end
+            end
+            return nil
+        end
+        
+        -- Функция для взятия ножа в руки
+        function equipKnife()
+            local backpack = localPlayer:FindFirstChild("Backpack")
+            if not backpack then return false end
+            
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("нож")) then
+                    tool.Parent = localPlayer.Character
+                    return true
+                end
+            end
+            return false
+        end
+        
+        -- Функция для атаки (ПКМ)
+        function performAttack()
+            if isAttacking then return end
+            isAttacking = true
+            
+            -- Имитируем нажатие ПКМ
+            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+            mouse.Button2Down:Fire()
+            
+            wait(0.2)
+            
+            -- Имитируем отпускание ПКМ
+            mouse.Button2Up:Fire()
+            
+            isAttacking = false
+        end
+        
+        -- Основной цикл ассасина
+        assassinLoop = RunService.Heartbeat:Connect(function()
+            local localCharacter = localPlayer.Character
+            if not localCharacter then return end
+            
+            local humanoid = localCharacter:FindFirstChild("Humanoid")
+            local rootPart = localCharacter:FindFirstChild("HumanoidRootPart")
+            if not humanoid or humanoid.Health <= 0 or not rootPart then return end
+            
+            -- Проверяем есть ли нож
+            local hasKnife = false
+            for _, tool in ipairs(localCharacter:GetChildren()) do
+                if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("нож")) then
+                    hasKnife = true
+                    break
+                end
+            end
+            
+            -- Если ножа нет в руках, пытаемся взять
+            if not hasKnife then
+                hasKnife = equipKnife()
+            end
+            
+            -- Если нож есть, ищем цель
+            if hasKnife then
+                local targetPlayer, targetCharacter, targetRoot = findGunPlayer()
+                
+                if targetPlayer and targetRoot then
+                    -- Телепортируемся за спину игрока
+                    local behindOffset = targetRoot.CFrame.lookVector * -4
+                    local teleportPosition = targetRoot.Position + behindOffset + Vector3.new(0, 3, 0)
+                    
+                    rootPart.CFrame = CFrame.new(teleportPosition)
+                    
+                    -- Ждем немного и атакуем
+                    wait(0.1)
+                    performAttack()
+                    
+                    -- Ждем перед следующей атакой
+                    wait(0.5)
+                end
+            end
+        end)
+        
+        -- Сохраняем соединение для выключения
+        getgenv().AssassinConnection = assassinLoop
+        
+    else
+        print("Auto Assassin Off")
+        
+        -- Отключаем цикл
+        if getgenv().AssassinConnection then
+            getgenv().AssassinConnection:Disconnect()
+            getgenv().AssassinConnection = nil
+        end
+    end
+end)
+
 
 
 local Tab = Window:NewTab("Developers")
