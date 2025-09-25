@@ -6,7 +6,7 @@ print("🟢 M9kuuvs sistem live")
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/alek10er/MM2-chek/main/UI.lua"))()
 
 -- Создать окно UI
-local Window = Library.CreateLib("Exsile system", "RJTheme3")
+local Window = Library.CreateLib("Voltex software", "RJTheme3")
 
 local Tab = Window:NewTab("Main")
 
