@@ -104,17 +104,13 @@ Section:NewButton("Teleport to Gun", "Teleport gun to Sheriff", function()
     end
 end)
 
--- Автоматическое отслеживание (опционально)
-game:GetService("RunService").Heartbeat:Connect(function()
-    findGunPlayer()
-end)
 
---Авто фарм 
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local teleportingToCoins = false
 local currentTween = nil
+local originalWalkSpeed = 16 -- Сохраняем оригинальную скорость
 
 -- Функция поиска ВСЕХ монеток в workspace
 local function findAllCoins()
@@ -153,7 +149,19 @@ end
 local function setHumanoidWalking(character, enabled)
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     if humanoid then
-        humanoid.WalkSpeed = enabled and 20 or 0 -- Увеличили скорость ходьбы
+        if enabled then
+            humanoid.WalkSpeed = 20 -- Скорость при авто-сборе
+        else
+            humanoid.WalkSpeed = 0 -- Останавливаем при полете
+        end
+    end
+end
+
+-- Функция для восстановления оригинальной скорости
+local function restoreWalkSpeed(character)
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = originalWalkSpeed
     end
 end
 
@@ -181,17 +189,17 @@ local function moveToCoin(character, coin)
     if distance < 15 then
         setHumanoidWalking(character, true)
         humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
-        wait(0.3) -- Уменьшили паузу ходьбы
+        wait(0.3)
         setHumanoidWalking(character, false)
         
     -- Если монетка на среднем расстоянии (15-40 studs) - быстрый полет
     elseif distance < 40 then
         setHumanoidWalking(character, true)
         humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
-        wait(0.4) -- Короткая ходьба
+        wait(0.4)
         
         setHumanoidWalking(character, false)
-        local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) -- Ускорили полет
+        local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(targetPosition)})
         tween:Play()
         tween.Completed:Wait()
@@ -201,27 +209,27 @@ local function moveToCoin(character, coin)
         -- Этап 1: Быстрая ходьба
         setHumanoidWalking(character, true)
         humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
-        wait(0.6) -- Уменьшили время ходьбы
+        wait(0.6)
         
         -- Этап 2: Быстрый полет
         setHumanoidWalking(character, false)
         local intermediatePosition = (humanoidRootPart.Position + targetPosition) / 2
         intermediatePosition = intermediatePosition + Vector3.new(0, 4, 0)
         
-        local tweenInfo1 = TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) -- Ускорили
+        local tweenInfo1 = TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         local tween1 = TweenService:Create(humanoidRootPart, tweenInfo1, {CFrame = CFrame.new(intermediatePosition)})
         tween1:Play()
         tween1.Completed:Wait()
         
         -- Этап 3: Быстрый завершающий полет
-        local tweenInfo2 = TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.In) -- Ускорили
+        local tweenInfo2 = TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
         local tween2 = TweenService:Create(humanoidRootPart, tweenInfo2, {CFrame = CFrame.new(targetPosition)})
         tween2:Play()
         tween2.Completed:Wait()
         
         -- Короткая имитация приземления
         setHumanoidWalking(character, true)
-        wait(0.2) -- Уменьшили паузу
+        wait(0.2)
         setHumanoidWalking(character, false)
     end
     
@@ -256,25 +264,35 @@ local function startCoinCollection()
     if teleportingToCoins then return end
     teleportingToCoins = true
     
+    -- Сохраняем оригинальную скорость перед началом
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            originalWalkSpeed = humanoid.WalkSpeed
+        end
+    end
+    
     local function collectCoins()
         while teleportingToCoins do
             local localPlayer = game.Players.LocalPlayer
             local character = localPlayer.Character
             
             if not character or not character.Parent then
-                wait(1) -- Уменьшили паузу
+                wait(1)
                 continue
             end
             
             setHumanoidWalking(character, true)
-            wait(0.3) -- Уменьшили начальную паузу
+            wait(0.3)
             
             local coins = findAllCoins()
             
             if #coins == 0 then
                 print("Монетки не найдены")
                 setHumanoidWalking(character, false)
-                wait(2) -- Уменьшили паузу
+                wait(2)
                 continue
             end
             
@@ -301,21 +319,20 @@ local function startCoinCollection()
                 
                 if success then
                     print("✅ Забрал монетку " .. i)
-                    -- Короткие паузы после сбора
                     setHumanoidWalking(character, true)
-                    wait(0.4) -- Уменьшили
+                    wait(0.4)
                     setHumanoidWalking(character, false)
-                    wait(0.3) -- Уменьшили
+                    wait(0.3)
                 else
                     print("❌ Ошибка")
-                    wait(0.5) -- Уменьшили
+                    wait(0.5)
                 end
             end
             
             if teleportingToCoins then
                 setHumanoidWalking(character, false)
                 print("🔁 Поиск новых монеток...")
-                wait(1) -- Уменьшили паузу между циклами
+                wait(1)
             end
         end
     end
@@ -330,16 +347,17 @@ local function stopCoinCollection()
         currentTween = nil
     end
     
+    -- Восстанавливаем оригинальную скорость ходьбы
     local localPlayer = game.Players.LocalPlayer
     if localPlayer and localPlayer.Character then
-        setHumanoidWalking(localPlayer.Character, false)
+        restoreWalkSpeed(localPlayer.Character)
     end
     
-    print("Авто-сбор выключен")
+    print("Авто-сбор выключен, скорость ходьбы восстановлена")
 end
 
 -- Переключатель
-Section:NewToggle("Auto Coin Collection (Fast)", "Fast realistic movement to coins", function(state)
+Section:NewToggle("Auto Coin Collection (Fixed)", "Fast realistic movement to coins", function(state)
     if state then
         print("⚡ Авто-сбор включен (быстрый режим)")
         startCoinCollection()
