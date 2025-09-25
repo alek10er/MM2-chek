@@ -6,7 +6,7 @@ print("🟢 M9kuuvs sistem live")
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/alek10er/MM2-chek/main/UI.lua"))()
 
 -- Создать окно UI
-local Window = Library.CreateLib("M9kuuvs system", "RJTheme3")
+local Window = Library.CreateLib("Exsile system", "RJTheme3")
 
 local Tab = Window:NewTab("Main")
 
@@ -25,6 +25,91 @@ Section:NewSlider("Jump Power", "You can change jump height", 200, 50, function(
     game.Players.LocalPlayer.Character.Humanoid.JumpPower = s
 end)
 
+-- Глобальные переменные для отслеживания
+local gunTracker = {
+    lastGunPlayer = nil,
+    lastGunPosition = nil,
+    lastDetectionTime = 0
+}
+
+-- Функция для поиска игрока с gun
+function findGunPlayer()
+    local Players = game:GetService("Players")
+    local localPlayer = Players.LocalPlayer
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local hasGun = false
+                
+                -- Проверяем backpack
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                            hasGun = true
+                            break
+                        end
+                    end
+                end
+                
+                -- Проверяем инструменты в руках
+                if not hasGun then
+                    for _, tool in ipairs(character:GetChildren()) do
+                        if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name == "gun") then
+                            hasGun = true
+                            break
+                        end
+                    end
+                end
+                
+                if hasGun then
+                    gunTracker.lastGunPlayer = player
+                    gunTracker.lastGunPosition = character.HumanoidRootPart.Position
+                    gunTracker.lastDetectionTime = tick()
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- Кнопка для телепортации к игроку с gun
+Section:NewButton("Teleport to Gun", "Teleport gun to Sheriff", function()
+    local hasGun = findGunPlayer()
+    
+    if hasGun then
+        -- Показываем уведомление об ошибке
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Error",
+            Text = "Gun not drop",
+            Duration = 3,
+            Icon = "⚠️"
+        })
+    elseif gunTracker.lastGunPosition then
+        -- Телепортируемся к последней позиции
+        local character = game.Players.LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(gunTracker.lastGunPosition + Vector3.new(0, 5, 0))
+        end
+    else
+        -- Если никогда не находили gun
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Info",
+            Text = "Gun never detected",
+            Duration = 3
+        })
+    end
+end)
+
+-- Автоматическое отслеживание (опционально)
+game:GetService("RunService").Heartbeat:Connect(function()
+    findGunPlayer()
+end)
+
+--Авто фарм 
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -910,10 +995,9 @@ local Tab = Window:NewTab("News")
 -- Подсекция
 local Section = Tab:NewSection("News")
 
-Section:NewButton("M9KUUVS SOFTWARE SYSTEMS V1.0.0", "IDK", function()
+Section:NewButton("EXSILE SOFTWARE SYSTEMS V1.16.2", "IDK", function()
 end)
-Section:NewButton("Last UPD in 24.09.25", "IDK", function()
+Section:NewButton("Last UPD in 25.09.25", "IDK", function()
 end)
 Section:NewButton("Thx for play))", "Good luck", function()
 end)
-
