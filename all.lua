@@ -1355,7 +1355,7 @@ local Section = Tab:NewSection("News")
 
 Section:NewButton("EXSILE SOFTWARE SYSTEMS V1.16.2", "IDK", function()
 end)
-Section:NewButton("Last UPD in 25.09.25", "IDK", function()
+Section:NewButton("Last UPD in 21.10.25", "IDK", function()
 end)
 Section:NewButton("Thx for play))", "Good luck", function()
 end)
